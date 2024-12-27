@@ -1,0 +1,39 @@
+[gd_scene load_steps=6 format=3 uid="uid://bp0li36ar7af8"]
+
+[ext_resource type="Script" path="res://character_body_2d.gd" id="1_2e22y"]
+[ext_resource type="Script" path="res://player.gd" id="1_dpb5i"]
+[ext_resource type="Texture2D" uid="uid://bj7y78litm0s4" path="res://Texture/TX Player.png" id="2_6ovsc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7rovo"]
+atlas = ExtResource("2_6ovsc")
+region = Rect2(6, 14, 21, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wt0cp"]
+
+[node name="Player" type="Node2D"]
+script = ExtResource("1_dpb5i")
+
+[node name="PlayerCharacter" type="CharacterBody2D" parent="."]
+motion_mode = 1
+script = ExtResource("1_2e22y")
+
+[node name="PlayerSprite" type="Sprite2D" parent="PlayerCharacter"]
+position = Vector2(0, -12)
+texture = SubResource("AtlasTexture_7rovo")
+
+[node name="PlayerColision" type="CollisionShape2D" parent="PlayerCharacter"]
+shape = SubResource("RectangleShape2D_wt0cp")
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="PlayerCharacter"]
+emitting = false
+amount = 100
+lifetime = 0.3
+one_shot = true
+explosiveness = 0.2
+randomness = 0.14
+spread = 175.91
+gravity = Vector2(0, 0)
+initial_velocity_min = 121.61
+initial_velocity_max = 162.02
+damping_min = 100.0
+damping_max = 100.0
