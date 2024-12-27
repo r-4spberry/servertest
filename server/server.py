@@ -170,7 +170,7 @@ def setup_server():
     """Initializes the UDP socket server."""
     global sock
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(("", PORT))
+    sock.bind(("0.0.0.0", PORT))
     #print(f"Server started on port {PORT}. Ready to receive data!")
 
     # Set a timeout so we don't block forever
