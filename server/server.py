@@ -60,45 +60,46 @@ def notify_about_old_players(addr):
 
 
 def process_data(addr, data):
-    global next_id
-    global actions_queue
-    print(f"Processing data: {data}")
-    data_type = data.get("type")
-    client_id = data.get("id")
-    print(f"Type: {data_type}")
+global next_id
+global actions_queue
+print(f"Processing data: {data}")
+data_type = data.get("type")
+client_id = data.get("id")
+print(f"Type: {data_type}")
 
-    if data_type is None:
-        print(f"Invalid data received: {data}")
-        return
+if data_type is None:
+    print(f"Invalid data received: {data}")
+    return
 
-    if data_type == "id":
-        position = data.get("position")
-        client = find_client(addr)
-        if client is None:
-            # New client, assign an ID
-            clients[addr] = {"id": next_id, "addr": addr, "position": position}
-            send_id(addr, next_id, position)
-            notify_about_old_players(addr)
-            next_id += 1
-        else:
-            # Existing client, resend ID
-            send_id(addr, client["id"], position)
-            notify_about_old_players(addr)
-    elif data_type == "actions":
-        actions = data.get("actions")
-        timestamp = data.get("timestamp")
-        print(f"Actions array length: {len(actions)}")
-        print(f"Timestamp: {timestamp}")
+if data_type == "id":
+    position = data.get("position")
+    client = find_client(addr)
+    if client is None:
+        # New client, assign an ID
+        clients[addr] = {"id": next_id, "addr": addr, "position": position}
+        send_id(addr, next_id, position)
+        notify_about_old_players(addr)
+        next_id += 1
+    else:
+        # Existing client, resend ID
+        send_id(addr, client["id"], position)
+        notify_about_old_players(addr)
+elif data_type == "actions":
+    actions = data.get("actions")
+    timestamp = data.get("timestamp")
+    print(f"Actions array length: {len(actions)}")
+    print(f"Timestamp: {timestamp}")
 
-        with actions_lock:
-            for action in actions:
-                type = action.get("type")
-                action_data = action.get("data")
-                print(f"Processing action: {action}")
-                print(f"Request type: {type}")
-                print(f"Data: {action_data}")
+    with actions_lock:
+        for action in actions:
+            type = action.get("type")
+            action_data = action.get("data")
+            print(f"Processing action: {action}")
+            print(f"Request type: {type}")
+            print(f"Data: {action_data}")
 
-                if type == "move":
+            if type == "move":
+                if action_data and "position" in action_data:  # Ensure position exists
                     combined_data = {
                         "data": action_data,
                         "id": client_id,
@@ -117,19 +118,24 @@ def process_data(addr, data):
                     )
                     actions_queue.append(combined_data)
                     client = find_client(addr)
-                    client["position"] = action.get("data").get("position")
-                if type == "action":
-                    combined_data = {
-                        "type": "action",
-                        "data": {
-                            "data": action_data,
-                            "id": client_id,
-                            "timestamp": timestamp,
-                            "type": "emit_particles",
-                        },
-                    }
-                    print(f"Combined data: {combined_data}")
-                    send_to_everyone_except(addr, combined_data)
+                    if client:
+                        client["position"] = action_data.get("position")
+                else:
+                    print(f"Warning: No position found in move action: {action}")
+
+            if type == "action":
+                combined_data = {
+                    "type": "action",
+                    "data": {
+                        "data": action_data,
+                        "id": client_id,
+                        "timestamp": timestamp,
+                        "type": "emit_particles",
+                    },
+                }
+                print(f"Combined data: {combined_data}")
+                send_to_everyone_except(addr, combined_data)
+
 
 
 def send_to_everyone_except(addr, data):
