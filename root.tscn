@@ -8,5 +8,3 @@
 
 [node name="NetworkManager" type="Node" parent="."]
 script = ExtResource("2_2e57b")
-ip = null
-port = null

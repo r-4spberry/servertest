@@ -16,12 +16,12 @@ actions_lock = threading.Lock()
 def send_data(addr, data):
     """Sends JSON-encoded data to the client at the specified address."""
     try:
-        #print(f"Sending data: {data} to {addr}")
+        print(f"Sending data: {data} to {addr}")
         sock.sendto(json.dumps(data).encode(), addr)
     except OSError as e:
-        #print(f"Error sending data to {addr}: {e}")
+        print(f"Error sending data to {addr}: {e}")
         if addr in clients:
-            #print(f"Removing client {clients[addr]['id']} due to send error.")
+            print(f"Removing client {clients[addr]['id']} due to send error.")
             del clients[addr]
 
 
@@ -37,7 +37,7 @@ def notify_about_new_player(client_id, position):
 def send_id(addr, client_id, position):
     """Sends the client ID to the address."""
     response = {"type": "id", "id": client_id}
-    #print(f"Sending ID: {client_id}")
+    print(f"Sending ID: {client_id}")
     send_data(addr, response)
     notify_about_new_player(client_id, position)
 
@@ -49,7 +49,7 @@ def find_client(addr):
 
 def notify_about_old_players(addr):
     for client in clients.values():
-        #print(client, addr)
+        print(client, addr)
         if client["addr"] != addr:
             message = {
                 "type": "old_player",
@@ -62,13 +62,13 @@ def notify_about_old_players(addr):
 def process_data(addr, data):
     global next_id
     global actions_queue
-    #print(f"Processing data: {data}")
+    print(f"Processing data: {data}")
     data_type = data.get("type")
     client_id = data.get("id")
-    #print(f"Type: {data_type}")
+    print(f"Type: {data_type}")
 
     if data_type is None:
-        #print(f"Invalid data received: {data}")
+        print(f"Invalid data received: {data}")
         return
 
     if data_type == "id":
@@ -87,16 +87,16 @@ def process_data(addr, data):
     elif data_type == "actions":
         actions = data.get("actions")
         timestamp = data.get("timestamp")
-        #print(f"Actions array length: {len(actions)}")
-        #print(f"Timestamp: {timestamp}")
+        print(f"Actions array length: {len(actions)}")
+        print(f"Timestamp: {timestamp}")
 
         with actions_lock:
             for action in actions:
                 type = action.get("type")
                 action_data = action.get("data")
-                #print(f"Processing action: {action}")
-                #print(f"Request type: {type}")
-                #print(f"Data: {action_data}")
+                print(f"Processing action: {action}")
+                print(f"Request type: {type}")
+                print(f"Data: {action_data}")
 
                 if type == "move":
                     combined_data = {
@@ -105,7 +105,7 @@ def process_data(addr, data):
                         "timestamp": timestamp,
                         "type": "move",
                     }
-                    #print(f"Combined data: {combined_data}")
+                    print(f"Combined data: {combined_data}")
 
                     # Check if there is an older (timestamp) move with the same id, remove it and add this one
                     actions_queue = deque(
@@ -127,11 +127,11 @@ def process_data(addr, data):
                             "timestamp": timestamp,
                             "type": "emit_particles",}
                     }
-                    #print(f"Combined data: {combined_data}")
+                    print(f"Combined data: {combined_data}")
                     send_to_everyone_except(addr, combined_data)
                     
 def send_to_everyone_except(addr, data):
-    #print(f"Sending data to everyone except {addr}")
+    print(f"Sending data to everyone except {addr}")
     for client in clients.values():
         if client["addr"] != addr:
             send_data(client["addr"], data)
@@ -147,10 +147,10 @@ def broadcast_actions():
             "data": list(actions_queue),
             "timestamp": int(time.time() * 1000),
         }
-        #print(f"Broadcasting actions: {response}")
-        #print(clients, clients.values())
+        print(f"Broadcasting actions: {response}")
+        print(clients, clients.values())
         for client in list(clients.values()):  # Use list() to avoid RuntimeError
-            #print(f"Sending data to client {client['id']}")
+            print(f"Sending data to client {client['id']}")
             send_data(client["addr"], response)
 
         actions_queue.clear()
@@ -171,7 +171,7 @@ def setup_server():
     global sock
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("0.0.0.0", PORT))
-    #print(f"Server started on port {PORT}. Ready to receive data!")
+    print(f"Server started on port {PORT}. Ready to receive data!")
 
     # Set a timeout so we don't block forever
     sock.settimeout(1)
@@ -182,10 +182,10 @@ def handle_incoming_data():
     while running:
         try:
             data, addr = sock.recvfrom(1024)
-            #print(f"Received data from {addr}: {data}")
+            print(f"Received data from {addr}: {data}")
             try:
                 json_data = json.loads(data.decode())
-                #print(f"Received JSON: {json_data}")
+                print(f"Received JSON: {json_data}")
                 process_data(addr, json_data)
             except json.JSONDecodeError:
                 print(f"Invalid JSON received: {data}")
@@ -198,7 +198,7 @@ def handle_incoming_data():
 
 def main():
     """Main server loop to set up the server and manage incoming data."""
-    #print("Starting server initialization...")
+    print("Starting server initialization...")
 
     # Initialize server socket and start the broadcast thread
     setup_server()
